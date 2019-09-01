@@ -9,10 +9,6 @@ main =
     Browser.sandbox { init = init, update = update, view = view }
 
 
-
--- Model
-
-
 type alias Model =
     Int
 
@@ -20,10 +16,6 @@ type alias Model =
 init : Model
 init =
     0
-
-
-
--- Update
 
 
 type Msg
@@ -43,10 +35,6 @@ update msg model =
 
         Reset ->
             0
-
-
-
--- View
 
 
 view : Model -> Html Msg
