@@ -5,6 +5,7 @@ import Char exposing (isDigit, isLower, isUpper)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
+import List exposing (filterMap, isEmpty)
 import String
 
 
@@ -12,8 +13,12 @@ main =
     Browser.sandbox { init = init, update = update, view = view }
 
 
-type alias Valid =
-    Maybe Bool
+type alias ValidationError =
+    String
+
+
+type alias ValidationErrors =
+    List ValidationError
 
 
 type alias Model =
@@ -21,7 +26,7 @@ type alias Model =
     , age : String
     , password : String
     , passwordAgain : String
-    , valid : Valid
+    , errors : Maybe ValidationErrors
     }
 
 
@@ -54,7 +59,78 @@ update msg model =
             { model | passwordAgain = passwordAgain }
 
         Validate ->
-            { model | valid = validate model }
+            { model | errors = Just (validate model) }
+
+
+validate : Model -> ValidationErrors
+validate model =
+    filterMap (\n -> n model)
+        [ validateAge
+        , validatePasswordLength
+        , validatePasswordContainsUpper
+        , validatePasswordContainsLower
+        , validatePasswordContainsDigit
+        , validatePasswordMatch
+        ]
+
+
+validateAge : Model -> Maybe ValidationError
+validateAge model =
+    case String.toInt model.age of
+        Just int ->
+            if int > 0 then
+                Nothing
+
+            else
+                Just "Age must be greater than zero"
+
+        Nothing ->
+            Just "Age must be a number"
+
+
+validatePasswordLength : Model -> Maybe ValidationError
+validatePasswordLength model =
+    if String.length model.password < 9 then
+        Just "Password must contain more than 8 characters"
+
+    else
+        Nothing
+
+
+validatePasswordContainsDigit : Model -> Maybe ValidationError
+validatePasswordContainsDigit model =
+    if String.any isDigit model.password then
+        Nothing
+
+    else
+        Just "Password must contain at least one number"
+
+
+validatePasswordContainsLower : Model -> Maybe ValidationError
+validatePasswordContainsLower model =
+    if String.any isLower model.password then
+        Nothing
+
+    else
+        Just "Password must contain at least one lowercase character"
+
+
+validatePasswordContainsUpper : Model -> Maybe ValidationError
+validatePasswordContainsUpper model =
+    if String.any isUpper model.password then
+        Nothing
+
+    else
+        Just "Password must contain at least one uppercase character"
+
+
+validatePasswordMatch : Model -> Maybe ValidationError
+validatePasswordMatch model =
+    if model.password == model.passwordAgain then
+        Nothing
+
+    else
+        Just "Passwords do not match"
 
 
 view : Model -> Html Msg
@@ -65,7 +141,7 @@ view model =
         , viewInput "text" "Password" model.password Password
         , viewInput "text" "Re-enter Password" model.passwordAgain PasswordAgain
         , button [ onClick Validate ] [ text "Submit" ]
-        , viewValidation model.valid
+        , viewValidation model.errors
         ]
 
 
@@ -74,38 +150,35 @@ viewInput t p v toMsg =
     input [ type_ t, placeholder p, value v, onInput toMsg ] []
 
 
-validate : Model -> Valid
-validate model =
-    if String.length model.password < 9 then
-        Just False
-
-    else if not (String.any isDigit model.password) then
-        Just False
-
-    else if not (String.any isLower model.password) then
-        Just False
-
-    else if not (String.any isUpper model.password) then
-        Just False
-
-    else if not (String.all isDigit model.age) then
-        Just False
-
-    else if model.password /= model.passwordAgain then
-        Just False
-
-    else
-        Just True
-
-
-viewValidation : Valid -> Html msg
-viewValidation valid =
-    case valid of
+viewValidation : Maybe ValidationErrors -> Html a
+viewValidation someErrors =
+    case someErrors of
         Nothing ->
-            div [ style "color" "black" ] [ text "Enter details" ]
+            viewEmpty
 
-        Just True ->
-            div [ style "color" "green" ] [ text "OK" ]
+        Just errors ->
+            if isEmpty errors then
+                viewSuccess
 
-        Just False ->
-            div [ style "color" "red" ] [ text "Error" ]
+            else
+                viewErrors errors
+
+
+viewEmpty : Html a
+viewEmpty =
+    div [ style "color" "black" ] [ text "Enter details" ]
+
+
+viewSuccess : Html a
+viewSuccess =
+    div [ style "color" "green" ] [ text "OK" ]
+
+
+viewErrors : ValidationErrors -> Html a
+viewErrors errors =
+    ul [ class "errors" ] (List.map viewError errors)
+
+
+viewError : ValidationError -> Html a
+viewError error =
+    li [ style "color" "red" ] [ text error ]
