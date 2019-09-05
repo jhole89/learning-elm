@@ -29,17 +29,17 @@ view : Model -> Html Msg
 view model =
   case String.toFloat model.input of
     Just celsius ->
-      viewConverter model.input "blue" (String.fromFloat (celsius * 1.8 + 32))
+      viewConverter model.input "black" "blue" (String.fromFloat (celsius * 1.8 + 32))
 
     Nothing ->
-      viewConverter model.input "red" "???"
+      viewConverter model.input "red" "red" "???"
 
 
-viewConverter : String -> String -> String -> Html Msg
-viewConverter userInput color equivalentTemp =
+viewConverter : String -> String -> String -> String -> Html Msg
+viewConverter userInput outlineColor highlightColor equivalentTemp =
   span []
-    [ input [ value userInput, onInput Change, style "width" "40px" ] []
+    [ input [ value userInput, onInput Change, style "width" "40px", style "border-color" outlineColor ] []
     , text "°C = "
-    , span [ style "color" color ] [ text equivalentTemp ]
+    , span [ style "color" highlightColor ] [ text equivalentTemp ]
     , text "°F"
     ]
