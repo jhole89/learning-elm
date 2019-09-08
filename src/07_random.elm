@@ -29,7 +29,7 @@ update msg model =
     case msg of
         Roll ->
             ( model
-            , Random.generate NewFace (Random.int 1 6)
+            , Random.generate NewFace snakeEyes
             )
 
         NewFace newFace ->
@@ -37,6 +37,9 @@ update msg model =
             , Cmd.none
             )
 
+snakeEyes : Random.Generator Int
+snakeEyes =
+  Random.weighted (50, 1) [ (10, 2), (10, 3), (10, 4), (10, 5), (10, 6) ]
 
 subs : Model -> Sub Msg
 subs _ =
