@@ -11,17 +11,19 @@ main =
 
 
 type alias Model =
-    { dieFace : Int }
+    { dieFace1 : Int
+    , dieFace2 : Int
+    }
 
 
 type Msg
     = Roll
-    | NewFace Int
+    | NewFace ( Int, Int )
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model 1, Cmd.none )
+    ( Model 1 1, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -29,13 +31,18 @@ update msg model =
     case msg of
         Roll ->
             ( model
-            , Random.generate NewFace snakeEyes
+            , Random.generate NewFace roll
             )
 
-        NewFace newFace ->
-            ( Model newFace
+        NewFace (newFace1, newFace2) ->
+            ( Model newFace1 newFace2
             , Cmd.none
             )
+
+roll : Random.Generator (Int, Int)
+roll =
+    Random.pair snakeEyes snakeEyes
+
 
 snakeEyes : Random.Generator Int
 snakeEyes =
@@ -49,6 +56,6 @@ subs _ =
 view : Model -> Html Msg
 view model =
     div []
-        [ h1 [] [ text (String.fromInt model.dieFace) ]
+        [ h1 [] [ text ((String.fromInt model.dieFace1) ++ " " ++  (String.fromInt model.dieFace2)) ]
         , button [ onClick Roll ] [ text "Roll" ]
         ]
