@@ -120,8 +120,8 @@ drawValue dieValue =
 
         _ ->
             [ Svg.clipPath [ id "clipView" ]
-                [ rect [ x "1", y "1", width "100", height "100", rx "15", ry "15", fill "black" ] [] ]
+                [ rect [ x "5", y "5", width "90", height "90", rx "15", ry "15" ] [] ]
             , img
-                [ width "90", height "90", xlinkHref "https://images-na.ssl-images-amazon.com/images/I/613bUK4cUKL._SY355_.jpg", clipPath "url(#clipView)" ]
+                [ width "100", height "100", xlinkHref "https://images-na.ssl-images-amazon.com/images/I/613bUK4cUKL._SY355_.jpg", clipPath "url(#clipView)" ]
                 []
             ]
