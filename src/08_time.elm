@@ -1,26 +1,35 @@
+module Main exposing (Model, Msg(..), init, main, subs, update, view)
+
 import Browser
 import Html exposing (..)
-import Time
+import Html.Events exposing (onClick)
 import Task
+import Time
 
 
-main = Browser.element { init = init, update = update, subscriptions = subs, view = view }
+main =
+    Browser.element { init = init, update = update, subscriptions = subs, view = view }
 
 
 type alias Model =
     { zone : Time.Zone
     , time : Time.Posix
+    , run : Bool
     }
 
+
 type Msg
-  = Tick Time.Posix
-  | AdjustTimeZone Time.Zone
+    = Tick Time.Posix
+    | AdjustTimeZone Time.Zone
+    | Pause
+
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model Time.utc ( Time.millisToPosix 0 )
+    ( Model Time.utc (Time.millisToPosix 0) True
     , Task.perform AdjustTimeZone Time.here
     )
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -35,15 +44,35 @@ update msg model =
             , Cmd.none
             )
 
-subs : Model -> Sub Msg
-subs _ =
-    Time.every 1000 Tick
+        Pause ->
+            ( { model | run = False }
+            , Cmd.none
+            )
 
-view: Model -> Html Msg
+
+subs : Model -> Sub Msg
+subs model =
+    if model.run then
+        Time.every 1000 Tick
+
+    else
+        Sub.none
+
+
+view : Model -> Html Msg
 view model =
     let
-        hour = String.fromInt (Time.toHour model.zone model.time)
-        minute = String.fromInt (Time.toMinute model.zone model.time)
-        second = String.fromInt (Time.toSecond model.zone model.time)
+        hour =
+            String.fromInt (Time.toHour model.zone model.time)
+
+        minute =
+            String.fromInt (Time.toMinute model.zone model.time)
+
+        second =
+            String.fromInt (Time.toSecond model.zone model.time)
     in
-    h1 [] [ text (hour ++ ":" ++ minute ++ ":" ++ second) ]
+    div []
+        [ h1 [] [ text (hour ++ ":" ++ minute ++ ":" ++ second) ]
+        , br [] []
+        , button [ onClick Pause ] [ text "Pause" ]
+        ]
